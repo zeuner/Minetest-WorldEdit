@@ -1113,10 +1113,7 @@ minetest.register_chatcommand("/restore", {
 minetest.register_chatcommand("/save", {
 	params = "<file>",
 	description = "Save the current WorldEdit region to \"(world folder)/schems/<file>.we\"",
-	privs = {
-		worldedit=true,
-		worldedit_global=true,
-	},
+	privs = {worldedit=true, worldedit_global=true},
 	func = safe_region(function(name, param)
 		if param == "" then
 			worldedit.player_notify(name, "invalid usage: " .. param)
@@ -1150,10 +1147,7 @@ minetest.register_chatcommand("/save", {
 minetest.register_chatcommand("/allocate", {
 	params = "<file>",
 	description = "Set the region defined by nodes from \"(world folder)/schems/<file>.we\" as the current WorldEdit region",
-	privs = {
-		worldedit=true,
-		worldedit_global=true,
-	},
+	privs = {worldedit=true, worldedit_global=true},
 	func = function(name, param)
 		local pos = get_position(name)
 		if pos == nil then return end
@@ -1197,10 +1191,7 @@ minetest.register_chatcommand("/allocate", {
 minetest.register_chatcommand("/load", {
 	params = "<file>",
 	description = "Load nodes from \"(world folder)/schems/<file>[.we[m]]\" with position 1 of the current WorldEdit region as the origin",
-	privs = {
-		worldedit=true,
-		worldedit_global=true,
-	},
+	privs = {worldedit=true, worldedit_global=true},
 	func = function(name, param)
 		if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
 			worldedit.player_notify(
@@ -1292,10 +1283,7 @@ minetest.register_chatcommand("/mtschemcreate", {
 	params = "<file>",
 	description = "Save the current WorldEdit region using the Minetest "..
 		"Schematic format to \"(world folder)/schems/<filename>.mts\"",
-	privs = {
-		worldedit=true,
-		worldedit_global=true,
-	},
+	privs = {worldedit=true, worldedit_global=true},
 	func = safe_region(function(name, param)
 		if param == nil then
 			worldedit.player_notify(name, "No filename specified")
@@ -1326,10 +1314,7 @@ minetest.register_chatcommand("/mtschemcreate", {
 minetest.register_chatcommand("/mtschemplace", {
 	params = "<file>",
 	description = "Load nodes from \"(world folder)/schems/<file>.mts\" with position 1 of the current WorldEdit region as the origin",
-	privs = {
-		worldedit=true,
-		worldedit_global=true,
-	},
+	privs = {worldedit=true, worldedit_global=true},
 	func = function(name, param)
 		if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
 			worldedit.player_notify(
