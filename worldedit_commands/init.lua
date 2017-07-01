@@ -469,29 +469,23 @@ local check_sphere = function(name, param)
 		worldedit.player_notify(name, "invalid usage: " .. param)
 		return nil
 	end
-	if nil ~= area_protection.areas then
-		local pos1 = worldedit.pos1[name]
-		local allowed, conflicting = area_protection.areas:canInteractInArea(
-			{
-				x = pos1.x - radius,
-				y = pos1.y - radius,
-				z = pos1.z - radius,
-			},
-			{
-				x = pos1.x + radius,
-				y = pos1.y + radius,
-				z = pos1.z + radius,
-			},
-			name,
-			false
-		)
-		if false == allowed then
-			worldedit.player_notify(
-				name,
-				"sphere may conflict with non-owned region " .. conflicting
-			)
-			return nil
-		end
+	local pos1 = worldedit.pos1[name]
+	local allowed = area_protection:interaction_allowed(
+		"sphere",
+		{
+			x = pos1.x - radius,
+			y = pos1.y - radius,
+			z = pos1.z - radius,
+		},
+		{
+			x = pos1.x + radius,
+			y = pos1.y + radius,
+			z = pos1.z + radius,
+		},
+		name
+	)
+	if not allowed then
+		return nil
 	end
 	local node = get_node(name, nodename)
 	if not node then return nil end
@@ -532,29 +526,23 @@ local check_dome = function(name, param)
 		worldedit.player_notify(name, "invalid usage: " .. param)
 		return nil
 	end
-	if nil ~= area_protection.areas then
-		local pos1 = worldedit.pos1[name]
-		local allowed, conflicting = area_protection.areas:canInteractInArea(
-			{
-				x = pos1.x - radius,
-				y = pos1.y,
-				z = pos1.z - radius,
-			},
-			{
-				x = pos1.x + radius,
-				y = pos1.y + radius,
-				z = pos1.z + radius,
-			},
-			name,
-			false
-		)
-		if false == allowed then
-			worldedit.player_notify(
-				name,
-				"dome may conflict with non-owned region " .. conflicting
-			)
-			return nil
-		end
+	local pos1 = worldedit.pos1[name]
+	local allowed = area_protection:interaction_allowed(
+		"dome",
+		{
+			x = pos1.x - radius,
+			y = pos1.y,
+			z = pos1.z - radius,
+		},
+		{
+			x = pos1.x + radius,
+			y = pos1.y + radius,
+			z = pos1.z + radius,
+		},
+		name
+	)
+	if not allowed then
+		return nil
 	end
 	local node = get_node(name, nodename)
 	if not node then return nil end
@@ -595,48 +583,42 @@ local check_cylinder = function(name, param)
 		worldedit.player_notify(name, "invalid usage: " .. param)
 		return nil
 	end
-	if nil ~= area_protection.areas then
-		length = tonumber(length)
-		if axis == "?" then
-			local sign
-			axis, sign = worldedit.player_axis(name)
-			length = length * sign
-		end
-		local pos1 = worldedit.pos1[name]
-		local current_pos = {x=pos1.x, y=pos1.y, z=pos1.z}
-		if length < 0 then
-			length = -length
-			current_pos[axis] = current_pos[axis] - length
-		end
-		local other1, other2 = worldedit.get_axis_others(axis)
-		local interact_pos1 = {
-			x = current_pos.x,
-			y = current_pos.y,
-			z = current_pos.z,
-		}
-		local interact_pos2 = {
-			x = current_pos.x,
-			y = current_pos.y,
-			z = current_pos.z,
-		}
-		interact_pos1[other1] = interact_pos1[other1] - radius
-		interact_pos1[other2] = interact_pos1[other2] - radius
-		interact_pos2[other1] = interact_pos2[other1] + radius
-		interact_pos2[other2] = interact_pos2[other2] + radius
-		interact_pos2[axis] = interact_pos2[axis] + length
-		local allowed, conflicting = area_protection.areas:canInteractInArea(
-			interact_pos1,
-			interact_pos2,
-			name,
-			false
-		)
-		if false == allowed then
-			worldedit.player_notify(
-				name,
-				"cylinder may conflict with non-owned region " .. conflicting
-			)
-			return nil
-		end
+	length = tonumber(length)
+	if axis == "?" then
+		local sign
+		axis, sign = worldedit.player_axis(name)
+		length = length * sign
+	end
+	local pos1 = worldedit.pos1[name]
+	local current_pos = {x=pos1.x, y=pos1.y, z=pos1.z}
+	if length < 0 then
+		length = -length
+		current_pos[axis] = current_pos[axis] - length
+	end
+	local other1, other2 = worldedit.get_axis_others(axis)
+	local interact_pos1 = {
+		x = current_pos.x,
+		y = current_pos.y,
+		z = current_pos.z,
+	}
+	local interact_pos2 = {
+		x = current_pos.x,
+		y = current_pos.y,
+		z = current_pos.z,
+	}
+	interact_pos1[other1] = interact_pos1[other1] - radius
+	interact_pos1[other2] = interact_pos1[other2] - radius
+	interact_pos2[other1] = interact_pos2[other1] + radius
+	interact_pos2[other2] = interact_pos2[other2] + radius
+	interact_pos2[axis] = interact_pos2[axis] + length
+	local allowed = area_protection:interaction_allowed(
+		"cylinder",
+		interact_pos1,
+		interact_pos2,
+		name
+	)
+	if not allowed then
+		return nil
 	end
 	local node = get_node(name, nodename)
 	if not node then return nil end
@@ -678,7 +660,7 @@ minetest.register_chatcommand("/cylinder", {
 })
 
 local check_pyramid = function(name, param)
-	if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
+	if area_protection:interaction_restrictions(name) then
 		worldedit.player_notify(
 			name,
 			"check_pyramid not yet supported with area protection"
@@ -745,7 +727,7 @@ minetest.register_chatcommand("/spiral", {
 		worldedit.player_notify(name, count .. " nodes added")
 	end,
 	function(name, param)
-		if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
+		if area_protection:interaction_restrictions(name) then
 			worldedit.player_notify(
 				name,
 				"/spiral not yet supported with area protection"
@@ -875,7 +857,7 @@ minetest.register_chatcommand("/stack2", {
 			worldedit.stack2(pos1, pos2, {x=x, y=y, z=z}, repetitions,
 				function() worldedit.player_notify(name, count .. " nodes stacked") end)
 		end, function()
-			if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
+			if area_protection:interaction_restrictions(name) then
 				worldedit.player_notify(
 					name,
 					"/stack2 not yet supported with area protection"
@@ -907,7 +889,7 @@ minetest.register_chatcommand("/stretch", {
 		worldedit.player_notify(name, count .. " nodes stretched")
 	end,
 	function(name, param)
-		if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
+		if area_protection:interaction_restrictions(name) then
 			worldedit.player_notify(
 				name,
 				"/stretch not yet supported with area protection"
@@ -1194,7 +1176,7 @@ minetest.register_chatcommand("/load", {
 	description = "Load nodes from \"(world folder)/schems/<file>[.we[m]]\" with position 1 of the current WorldEdit region as the origin",
 	privs = {worldedit=true, worldedit_global=true},
 	func = function(name, param)
-		if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
+		if area_protection:interaction_restrictions(name) then
 			worldedit.player_notify(
 				name,
 				"/load not yet supported with area protection"
@@ -1317,7 +1299,7 @@ minetest.register_chatcommand("/mtschemplace", {
 	description = "Load nodes from \"(world folder)/schems/<file>.mts\" with position 1 of the current WorldEdit region as the origin",
 	privs = {worldedit=true, worldedit_global=true},
 	func = function(name, param)
-		if nil ~= area_protection.areas and not minetest.check_player_privs(name, {areas = true}) then
+		if area_protection:interaction_restrictions(name) then
 			worldedit.player_notify(
 				name,
 				"/mtschemplace not yet supported with area protection"
